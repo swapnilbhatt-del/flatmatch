@@ -1,5 +1,6 @@
 import { ConstraintForm } from "@/components/ConstraintForm";
 import { ErrorPanel, Shell } from "@/components/Shell";
+import { PageTitle } from "@/components/ui";
 import { loadState } from "@/lib/load";
 
 export default async function EditForm({ params }: PageProps<"/g/[token]/form">) {
@@ -8,7 +9,9 @@ export default async function EditForm({ params }: PageProps<"/g/[token]/form">)
   if (!state) return <ErrorPanel message={error} />;
   return (
     <Shell token={token} state={state} active="home">
-      <h1 className="mb-3 text-xl font-semibold">Edit your constraints</h1>
+      <PageTitle eyebrow="Your constraints" title="Edit your answers">
+        Changes apply to every listing straight away.
+      </PageTitle>
       <ConstraintForm token={token} initial={state.my_constraints} />
     </Shell>
   );

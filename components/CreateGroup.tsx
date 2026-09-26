@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { CopyShare } from "./CopyShare";
+import { Avatar, Icon } from "./ui";
 
 export function CreateGroup() {
   const [name, setName] = useState("");
@@ -32,23 +33,28 @@ export function CreateGroup() {
   if (tokens) {
     const origin = window.location.origin;
     return (
-      <div className="space-y-3">
-        <p className="text-sm text-stone-700">
-          Here are 3 personal links, <strong>one per person</strong>. Keep yours and send one each to the other two.
-          The link <em>is</em> the login, so don&apos;t post them in the group chat. Send each one privately.
-          <strong> Save these now:</strong> they won&apos;t be shown again.
-        </p>
+      <div className="space-y-3 rise">
+        <div className="checkpoint flex gap-3">
+          <Icon name="lock" className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" />
+          <p>
+            <strong>Each link is someone&apos;s key.</strong> Keep yours and send one to each friend <em>privately</em>,
+            not in the group chat. <strong>Save them now:</strong> they won&apos;t be shown again.
+          </p>
+        </div>
         {tokens.map((t, i) => {
           const url = `${origin}/g/${t}`;
           return (
-            <div key={t} className="card space-y-2">
-              <div className="flex items-baseline justify-between">
-                <span className="font-semibold">Person {i + 1}{i === 0 ? " (you)" : ""}</span>
-                <a className="text-sm text-teal-700 underline" href={url}>
-                  Open
+            <div key={t} className="card-flat space-y-3 bg-white">
+              <div className="flex items-center gap-3">
+                <Avatar name={String(i + 1)} index={i} />
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold">Person {i + 1}{i === 0 ? " · you" : ""}</p>
+                  <p className="truncate font-mono text-xs text-stone-500">{url}</p>
+                </div>
+                <a className="btn-ghost" href={url}>
+                  Open <Icon name="arrow" className="h-4 w-4" />
                 </a>
               </div>
-              <p className="break-all font-mono text-xs text-stone-500">{url}</p>
               <CopyShare url={url} shareText="Here's your private link for our flat hunt. Fill in your form on your own:" />
             </div>
           );
@@ -58,17 +64,18 @@ export function CreateGroup() {
   }
 
   return (
-    <form onSubmit={create} className="space-y-3">
+    <form onSubmit={create} className="relative space-y-3">
       <div>
         <label className="label" htmlFor="gname">
-          Group name (optional)
+          Group name <span className="font-normal text-stone-400">(optional)</span>
         </label>
         <input id="gname" className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Pune flat hunt" maxLength={60} />
       </div>
       <button className="btn-primary w-full" disabled={busy}>
         {busy ? "Creating…" : "Create group & get 3 links"}
+        {!busy && <Icon name="arrow" className="h-4 w-4" />}
       </button>
-      {error && <p className="text-sm text-red-700">{error}</p>}
+      {error && <p className="text-sm text-rose-700">{error}</p>}
     </form>
   );
 }

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { PUNE_AREAS } from "@/lib/pune-areas";
 import type { Constraints, KeyLocation, NiceToHaves } from "@/lib/types";
+import { Icon, type IconName } from "./ui";
 
 const NICE: { key: keyof NiceToHaves; label: string }[] = [
   { key: "furnished", label: "Furnished" },
@@ -19,16 +20,36 @@ const splitList = (s: string) =>
     .map((x) => x.trim())
     .filter(Boolean);
 
-function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
+function Toggle({ checked, onChange, label, hint }: { checked: boolean; onChange: (v: boolean) => void; label: string; hint?: string }) {
   return (
-    <label className="flex min-h-11 items-center justify-between gap-3 border-b border-stone-100 py-1 last:border-0">
-      <span className="text-sm">{label}</span>
-      <span className="flex items-center gap-2 text-xs text-stone-500">
-        {checked ? "Yes" : "No"}
-        <input type="checkbox" role="switch" className="peer sr-only" checked={checked} onChange={(e) => onChange(e.target.checked)} />
-        <span className="relative h-7 w-12 rounded-full bg-stone-300 transition peer-checked:bg-teal-600 peer-focus-visible:ring-2 peer-focus-visible:ring-teal-600/40 after:absolute after:left-1 after:top-1 after:h-5 after:w-5 after:rounded-full after:bg-white after:transition peer-checked:after:translate-x-5" />
+    <label className="flex min-h-14 cursor-pointer items-center justify-between gap-3 border-b border-stone-100 py-2 last:border-0">
+      <span>
+        <span className="block text-[15px] text-stone-800">{label}</span>
+        {hint && <span className="hint block">{hint}</span>}
       </span>
+      <input type="checkbox" role="switch" className="peer sr-only" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+      <span className="relative h-8 w-14 shrink-0 rounded-full bg-stone-200 transition peer-checked:bg-brand-600 peer-focus-visible:ring-4 peer-focus-visible:ring-brand-500/20 after:absolute after:left-1 after:top-1 after:h-6 after:w-6 after:rounded-full after:bg-white after:shadow after:transition peer-checked:after:translate-x-6" />
     </label>
+  );
+}
+
+function Section({ n, icon, title, hint, children }: { n: number; icon: IconName; title: string; hint?: string; children: React.ReactNode }) {
+  return (
+    <section className="card rise">
+      <div className="mb-4 flex items-start gap-3">
+        <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-brand-50 text-brand-700">
+          <Icon name={icon} />
+          <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-white text-[10px] font-bold text-brand-700 ring-1 ring-brand-200">
+            {n}
+          </span>
+        </span>
+        <div>
+          <h2 className="font-semibold text-stone-900">{title}</h2>
+          {hint && <p className="hint mt-0.5">{hint}</p>}
+        </div>
+      </div>
+      {children}
+    </section>
   );
 }
 
@@ -101,26 +122,76 @@ export function ConstraintForm({ token, initial }: { token: string; initial: Con
 
   return (
     <form onSubmit={submit} className="space-y-4">
-      <p className="checkpoint">
-        🔒 <strong>Private.</strong> The others can&apos;t see your answers until all three of you have submitted, so
-        nobody anchors on anyone else. Answer for yourself.
-      </p>
+      <div className="checkpoint flex gap-3">
+        <Icon name="lock" className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" />
+        <p>
+          <strong>Private.</strong> The others can&apos;t see your answers until all three of you have submitted, so nobody
+          anchors on anyone else. Answer for yourself.
+        </p>
+      </div>
 
-      <section className="card space-y-3">
-        <div>
-          <label className="label" htmlFor="name">Name</label>
-          <input id="name" className="input" value={name} onChange={(e) => setName(e.target.value)} required maxLength={40} />
+      <Section n={1} icon="user" title="About you">
+        <div className="space-y-4">
+          <div>
+            <label className="label" htmlFor="name">Your name</label>
+            <input id="name" className="input" value={name} onChange={(e) => setName(e.target.value)} required maxLength={40} autoComplete="given-name" />
+          </div>
+          <div>
+            <label className="label" htmlFor="rent">Max rent you&apos;ll pay per month</label>
+            <div className="relative">
+              <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-stone-400">₹</span>
+              <input id="rent" className="input pl-8" inputMode="numeric" value={maxRent} onChange={(e) => setMaxRent(e.target.value)} placeholder="16,000" required />
+            </div>
+            <p className="hint mt-1.5">Your share only. Each listing is checked as total rent ÷ 3.</p>
+          </div>
         </div>
-        <div>
-          <label className="label" htmlFor="rent">Max rent contribution per month (₹)</label>
-          <input id="rent" className="input" inputMode="numeric" value={maxRent} onChange={(e) => setMaxRent(e.target.value)} placeholder="16000" required />
-          <p className="hint mt-1">Your share. Listings are checked as total rent ÷ 3.</p>
-        </div>
-      </section>
+      </Section>
 
-      <section className="card">
-        <h2 className="label">Areas I won&apos;t consider</h2>
-        <div className="mt-2 flex flex-wrap gap-2">
+      <Section n={2} icon="pin" title="Where you need to get to" hint="One way, at the time you'd usually travel.">
+        <div className="space-y-3">
+          {locs.map((l, i) => (
+            <div key={i} className="card-flat space-y-2 p-3">
+              <div className="grid grid-cols-[1fr_1.5fr] gap-2">
+                <input aria-label="What" className="input" value={l.label} onChange={(e) => setLoc(i, { label: e.target.value })} placeholder="Office" />
+                <input aria-label="Where" className="input" value={l.place} onChange={(e) => setLoc(i, { place: e.target.value })} placeholder="Hinjewadi Phase 1" />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-stone-500">Max</span>
+                <input aria-label="Max minutes" className="input w-20 text-center" inputMode="numeric" value={l.max_minutes} onChange={(e) => setLoc(i, { max_minutes: e.target.value })} />
+                <span className="flex-1 text-sm text-stone-500">minutes</span>
+                <button type="button" className="btn-ghost text-stone-500" aria-label="Remove location" onClick={() => setLocs((xs) => xs.filter((_, j) => j !== i))}>
+                  <Icon name="x" className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          ))}
+          {locs.length < 5 && (
+            <button type="button" className="btn w-full border-dashed" onClick={() => setLocs((xs) => [...xs, { label: "", place: "", max_minutes: "20" }])}>
+              <Icon name="plus" className="h-4 w-4" /> Add a place (gym, family, college…)
+            </button>
+          )}
+        </div>
+      </Section>
+
+      <Section n={3} icon="shield" title="Dealbreakers" hint="A flat that breaks any of these is ruled out, and the reason shows your name.">
+        <Toggle label="Lift required" checked={lift} onChange={setLift} />
+        <Toggle label="Parking required" checked={parking} onChange={setParking} />
+        <Toggle label="Pet-friendly required" checked={pets} onChange={setPets} />
+        <div className="mt-4 grid grid-cols-2 gap-3">
+          <div>
+            <label className="label" htmlFor="minbath">Min bathrooms</label>
+            <input id="minbath" className="input" inputMode="numeric" value={minBath} onChange={(e) => setMinBath(e.target.value)} placeholder="Any" />
+          </div>
+          <div>
+            <label className="label" htmlFor="maxfloor">Max floor without lift</label>
+            <input id="maxfloor" className="input" inputMode="numeric" value={maxFloor} onChange={(e) => setMaxFloor(e.target.value)} placeholder="Any" />
+            <p className="hint mt-1">0 = ground floor only</p>
+          </div>
+        </div>
+      </Section>
+
+      <Section n={4} icon="x" title="Areas you won't consider" hint="Tap to rule an area out.">
+        <div className="flex flex-wrap gap-2">
           {PUNE_AREAS.map((a) => {
             const on = noGo.includes(a);
             return (
@@ -129,82 +200,38 @@ export function ConstraintForm({ token, initial }: { token: string; initial: Con
                 key={a}
                 onClick={() => toggleArea(a)}
                 aria-pressed={on}
-                className={`chip ${on ? "border-red-300 bg-red-50 text-red-800" : "border-stone-200 bg-white text-stone-700"}`}
+                className={`chip ${on ? "border-rose-300 bg-rose-50 font-medium text-rose-800" : "border-stone-200 bg-white text-stone-700 hover:border-stone-300"}`}
               >
-                {on ? "✕ " : ""}
+                {on && <Icon name="x" className="h-3.5 w-3.5" strokeWidth={2.6} />}
                 {a}
               </button>
             );
           })}
         </div>
-        <label className="label mt-3" htmlFor="nogo-other">Other areas (comma-separated)</label>
-        <input id="nogo-other" className="input" value={noGoOther} onChange={(e) => setNoGoOther(e.target.value)} placeholder="e.g. Lohegaon, Moshi" />
-      </section>
+        <label className="label mt-4" htmlFor="nogo-other">Somewhere else?</label>
+        <input id="nogo-other" className="input" value={noGoOther} onChange={(e) => setNoGoOther(e.target.value)} placeholder="Lohegaon, Moshi (comma-separated)" />
+      </Section>
 
-      <section className="card space-y-3">
-        <div>
-          <h2 className="label">Key locations & max commute (one way)</h2>
-          <p className="hint">e.g. Office · Hinjewadi · 30 min, or Gym · Viman Nagar · 20 min</p>
-        </div>
-        {locs.map((l, i) => (
-          <div key={i} className="grid grid-cols-[1fr_1.4fr_5rem_auto] items-end gap-2">
-            <div>
-              <label className="hint" htmlFor={`ll${i}`}>What</label>
-              <input id={`ll${i}`} className="input" value={l.label} onChange={(e) => setLoc(i, { label: e.target.value })} placeholder="Office" />
-            </div>
-            <div>
-              <label className="hint" htmlFor={`lp${i}`}>Where</label>
-              <input id={`lp${i}`} className="input" value={l.place} onChange={(e) => setLoc(i, { place: e.target.value })} placeholder="Hinjewadi Phase 1" />
-            </div>
-            <div>
-              <label className="hint" htmlFor={`lm${i}`}>Max min</label>
-              <input id={`lm${i}`} className="input" inputMode="numeric" value={l.max_minutes} onChange={(e) => setLoc(i, { max_minutes: e.target.value })} />
-            </div>
-            <button type="button" className="btn px-3" aria-label="Remove location" onClick={() => setLocs((xs) => xs.filter((_, j) => j !== i))}>
-              ✕
-            </button>
-          </div>
-        ))}
-        {locs.length < 5 && (
-          <button type="button" className="btn w-full" onClick={() => setLocs((xs) => [...xs, { label: "", place: "", max_minutes: "20" }])}>
-            + Add a location
-          </button>
-        )}
-      </section>
-
-      <section className="card">
-        <h2 className="label">Hard requirements (dealbreakers)</h2>
-        <p className="hint mb-2">A flat that breaks any of these is ruled out, with your name on the reason.</p>
-        <Toggle label="Lift required" checked={lift} onChange={setLift} />
-        <Toggle label="Parking required" checked={parking} onChange={setParking} />
-        <Toggle label="Pet-friendly required" checked={pets} onChange={setPets} />
-        <div className="mt-3 grid grid-cols-2 gap-3">
-          <div>
-            <label className="label" htmlFor="minbath">Min bathrooms</label>
-            <input id="minbath" className="input" inputMode="numeric" value={minBath} onChange={(e) => setMinBath(e.target.value)} placeholder="No minimum" />
-          </div>
-          <div>
-            <label className="label" htmlFor="maxfloor">Max floor without lift</label>
-            <input id="maxfloor" className="input" inputMode="numeric" value={maxFloor} onChange={(e) => setMaxFloor(e.target.value)} placeholder="No limit" />
-            <p className="hint mt-1">0 = ground floor only</p>
-          </div>
-        </div>
-      </section>
-
-      <section className="card">
-        <h2 className="label">Nice-to-haves (I&apos;d prefer, but could live without)</h2>
+      <Section n={5} icon="heart" title="Nice-to-haves" hint="Things you'd prefer but could live without. These never rule a flat out.">
         {NICE.map((n) => (
           <Toggle key={n.key} label={n.label} checked={!!nice[n.key]} onChange={(v) => setNice((x) => ({ ...x, [n.key]: v }))} />
         ))}
-        <label className="label mt-3" htmlFor="nice-other">Anything else? (comma-separated)</label>
-        <input id="nice-other" className="input" value={niceOther} onChange={(e) => setNiceOther(e.target.value)} placeholder="e.g. quiet street, good natural light" />
-        <p className="hint mt-1">These can&apos;t be checked automatically, so they&apos;ll show as &ldquo;check yourself&rdquo;.</p>
-      </section>
+        <label className="label mt-4" htmlFor="nice-other">Anything else?</label>
+        <input id="nice-other" className="input" value={niceOther} onChange={(e) => setNiceOther(e.target.value)} placeholder="Quiet street, good light (comma-separated)" />
+        <p className="hint mt-1.5">Free-text wishes can&apos;t be checked automatically. They show up as &ldquo;check yourself&rdquo;.</p>
+      </Section>
 
-      {error && <p className="text-sm text-red-700">{error}</p>}
-      <button className="btn-primary w-full" disabled={busy}>
-        {busy ? "Saving…" : initial ? "Save changes" : "Submit my form"}
-      </button>
+      {error && (
+        <p className="flex items-center gap-2 rounded-2xl bg-rose-50 p-3 text-sm text-rose-800">
+          <Icon name="alert" className="h-4 w-4" /> {error}
+        </p>
+      )}
+      <div className="sticky bottom-20 z-10 sm:bottom-4">
+        <button className="btn-primary w-full" disabled={busy}>
+          {busy ? "Saving…" : initial ? "Save changes" : "Submit my form"}
+          {!busy && <Icon name="check" className="h-4 w-4" strokeWidth={2.4} />}
+        </button>
+      </div>
     </form>
   );
 }

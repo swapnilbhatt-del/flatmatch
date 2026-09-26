@@ -3,6 +3,21 @@
 @theme inline {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-fraunces);
+
+  /* Brand */
+  --color-brand-50: #eef7f5;
+  --color-brand-100: #d5ece7;
+  --color-brand-200: #acd8cf;
+  --color-brand-500: #2b8a7a;
+  --color-brand-600: #1f7061;
+  --color-brand-700: #185a4f;
+  --color-brand-800: #134840;
+  --color-brand-900: #0f3a34;
+
+  /* Warm neutral surface */
+  --color-paper: #f7f4ee;
+  --color-ink: #1d1b18;
 }
 
 :root {
@@ -10,34 +25,87 @@
 }
 
 body {
-  background: #f6f5f2;
-  color: #1c1917;
+  background-color: var(--color-paper);
+  background-image:
+    radial-gradient(60rem 30rem at 110% -10%, rgb(43 138 122 / 0.10), transparent 60%),
+    radial-gradient(40rem 24rem at -20% 0%, rgb(245 158 11 / 0.07), transparent 60%);
+  background-attachment: fixed;
+  color: var(--color-ink);
+  -webkit-tap-highlight-color: transparent;
+}
+
+::selection {
+  background: rgb(43 138 122 / 0.2);
 }
 
 @layer components {
-  .card {
-    @apply rounded-2xl border border-stone-200 bg-white p-4 shadow-sm;
+  .font-display {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    letter-spacing: -0.01em;
   }
+
+  .card {
+    @apply rounded-3xl border border-stone-200/80 bg-white/90 p-5 shadow-[0_1px_2px_rgb(28_25_23/0.04),0_8px_24px_-12px_rgb(28_25_23/0.10)] backdrop-blur-sm;
+  }
+  .card-flat {
+    @apply rounded-2xl border border-stone-200/80 bg-stone-50/70 p-4;
+  }
+
   .btn {
-    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-stone-300 bg-white px-4 text-sm font-medium text-stone-800 active:bg-stone-100 disabled:opacity-50;
+    @apply inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-2xl border border-stone-200 bg-white px-4 text-sm font-medium text-stone-800 shadow-sm transition active:scale-[0.98] hover:border-stone-300 hover:bg-stone-50 disabled:pointer-events-none disabled:opacity-50;
   }
   .btn-primary {
-    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-teal-700 px-4 text-sm font-semibold text-white active:bg-teal-800 disabled:opacity-50;
+    @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-brand-700 px-5 text-sm font-semibold text-white shadow-[0_6px_16px_-6px_rgb(24_90_79/0.6)] transition active:scale-[0.98] hover:bg-brand-800 disabled:pointer-events-none disabled:opacity-50;
   }
+  .btn-ghost {
+    @apply inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl px-3 text-sm font-medium text-brand-700 transition hover:bg-brand-50 active:scale-[0.98];
+  }
+
   .input {
-    @apply block min-h-11 w-full rounded-xl border border-stone-300 bg-white px-3 text-base text-stone-900 placeholder:text-stone-400 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20;
+    @apply block min-h-12 w-full rounded-2xl border border-stone-200 bg-white px-4 text-base text-stone-900 shadow-[inset_0_1px_2px_rgb(28_25_23/0.04)] transition placeholder:text-stone-400 focus:border-brand-500 focus:outline-none focus:ring-4 focus:ring-brand-500/15;
   }
   .label {
-    @apply mb-1 block text-sm font-medium text-stone-700;
+    @apply mb-1.5 block text-sm font-medium text-stone-700;
   }
   .hint {
-    @apply text-xs text-stone-500;
+    @apply text-xs leading-relaxed text-stone-500;
   }
+  .eyebrow {
+    @apply text-[11px] font-semibold uppercase tracking-[0.14em] text-stone-500;
+  }
+
   .chip {
-    @apply inline-flex min-h-9 items-center rounded-full border px-3 text-sm;
+    @apply inline-flex min-h-10 items-center gap-1 rounded-full border px-3.5 text-sm transition active:scale-[0.97];
   }
-  /* Human checkpoints get a consistent amber treatment everywhere. */
+  .pill {
+    @apply inline-flex items-center gap-1 rounded-full bg-stone-100 px-2.5 py-1 text-xs font-medium text-stone-700;
+  }
+
+  /* Human checkpoints: one consistent amber treatment everywhere. */
   .checkpoint {
-    @apply rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900;
+    @apply rounded-2xl border border-amber-200 bg-gradient-to-b from-amber-50 to-amber-50/40 p-4 text-sm text-amber-950;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.rise {
+  animation: rise 0.35s ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .rise {
+    animation: none;
+  }
+  * {
+    transition: none !important;
   }
 }
