@@ -43,7 +43,8 @@ const PROMPT =
   "Never guess or infer (e.g. do not assume a lift or parking). Listing:\n\n";
 
 export async function parseListing(text: string): Promise<ParseResult> {
-  const apiKey = process.env.GEMINI_API_KEY;
+  // Keys never contain whitespace; strip any that sneaked in when pasting (e.g. a line break).
+  const apiKey = process.env.GEMINI_API_KEY?.replace(/\s+/g, "");
   if (!apiKey) return { ok: false, reason: "not_configured" };
   const model = process.env.GEMINI_MODEL || DEFAULT_GEMINI_MODEL;
   try {
@@ -64,7 +65,8 @@ export async function parseListing(text: string): Promise<ParseResult> {
     return { ok: true, fields: normalizeFields(raw), title };
   } catch (e) {
     if (e instanceof ApiError && e.status === 429) return { ok: false, reason: "rate_limited" };
-    console.error("Gemini parse failed:", e instanceof Error ? e.message : e);
+    // Never log the raw error message: SDK errors can echo request headers, including the API key.
+    console.error("Gemini parse failed:", e instanceof ApiError ? `HTTP ${e.status}` : e instanceof Error ? e.name : "unknown error");
     return { ok: false, reason: "unavailable" };
   }
 }

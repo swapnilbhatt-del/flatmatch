@@ -13,8 +13,9 @@ export class DbError extends Error {
 }
 
 function client() {
-  const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_ANON_KEY;
+  // Strip whitespace that can sneak in when pasting values into the Vercel dashboard.
+  const url = process.env.SUPABASE_URL?.replace(/\s+/g, "");
+  const key = process.env.SUPABASE_ANON_KEY?.replace(/\s+/g, "");
   if (!url || !key) throw new DbError("not_configured");
   return createClient(url, key, { auth: { persistSession: false } });
 }
@@ -25,7 +26,8 @@ export async function rpc<T>(fn: string, args: Record<string, unknown>): Promise
     res = await client().rpc(fn, args);
   } catch (e) {
     if (e instanceof DbError) throw e;
-    throw new DbError("unreachable", String(e));
+    // Only keep the error name: network errors can echo request headers (which carry the key).
+    throw new DbError("unreachable", e instanceof Error ? e.name : "network error");
   }
   const { data, error } = res;
   if (error) {
