@@ -1,0 +1,69 @@
+%% FlatMatch components map. Amber hexagons = HUMAN CHECKPOINTS.
+%% Export: npm run docs:map  (uses @mermaid-js/mermaid-cli, free & local)
+flowchart LR
+  classDef screen fill:#ccfbf1,stroke:#0f766e,color:#134e4a
+  classDef api fill:#e7e5e4,stroke:#57534e,color:#1c1917
+  classDef ai fill:#dbeafe,stroke:#1d4ed8,color:#1e3a8a
+  classDef logic fill:#ede9fe,stroke:#6d28d9,stroke-width:2px,color:#3b0764
+  classDef db fill:#fafaf9,stroke:#78716c,color:#1c1917
+  classDef human fill:#fde68a,stroke:#b45309,stroke-width:3px,color:#78350f
+  classDef ext fill:#ffffff,stroke:#a8a29e,stroke-dasharray:4 3,color:#44403c
+
+  subgraph J1["1 · Create group"]
+    direction TB
+    S1["Screen: Create group<br/>/"] --> A1["POST /api/groups"]
+    A1 -. "3 personal links<br/>Copy / Share (WhatsApp)" .-> S2
+  end
+
+  subgraph J2["2 · Private constraints"]
+    direction TB
+    S2["Screen: Constraint form<br/>/g/[token]<br/>'2 of 3 submitted'"] --> H1{{"HUMAN<br/>Each person submits<br/>her own form<br/>(others hidden until 3/3)"}}
+    H1 --> A2["POST /api/constraints"]
+  end
+
+  subgraph J3["3 · Add listing"]
+    direction TB
+    S3["Screen: Add listing<br/>/g/[token]/listings/new<br/>paste text + URL"] --> A3["POST /api/listings/parse"]
+    A3 --> G["Gemini API (free tier)<br/>structured JSON output<br/>unclear = 'unknown'"]
+    G -- "ok" --> H2
+    G -- "no key / 429 / error" --> F["Manual entry form<br/>(friendly message)"] --> H2
+    S3 --> MAP["'Check on Google Maps'<br/>plain URL, no API key<br/>→ minutes per person"] --> H2
+    H2{{"HUMAN<br/>Review & correct<br/>extracted fields +<br/>enter commute estimates"}} --> A4["POST /api/listings"]
+  end
+
+  subgraph J4["4 · Dealbreakers & tradeoffs"]
+    direction TB
+    X["lib/matching.ts<br/>deterministic, no AI<br/>Ruled out · Needs verification · Qualifies<br/>+ ✅ gets / ⚠️ gives up per person<br/>(no winner, no combined score)"]
+    X --> S4["Screen: Results<br/>/g/[token]/results"]
+    S4 --> H3{{"HUMAN<br/>'I confirmed my commute'<br/>(only that person)"}} --> A5["POST /api/commute/confirm"]
+    S4 --> H4{{"HUMAN<br/>Tick 'Verified' on<br/>each unknown field"}} --> A6["POST /api/verify"]
+    S4 -- "qualifying only<br/>(re-checked by matching)" --> A7["POST /api/shortlist"]
+  end
+
+  subgraph J5["5 · Shortlist & decide"]
+    direction TB
+    S5["Screen: Shortlist<br/>/g/[token]/shortlist<br/>2–3 flats side by side"] --> H4b{{"HUMAN<br/>Verify remaining<br/>unknown fields"}}
+    H4b --> H5{{"HUMAN<br/>Final decision,<br/>made together<br/>(app never picks)"}}
+  end
+
+  subgraph DB["Supabase Free · Postgres · RLS on, access only via token-checked functions"]
+    direction TB
+    T1[("groups")]
+    T2[("members<br/>token = identity")]
+    T3[("constraints")]
+    T4[("listings<br/>fields jsonb")]
+    T5[("listing_checks<br/>commutes + verified fields")]
+    T6[("shortlist")]
+  end
+
+  A1 & A2 & A4 & A5 & A6 & A7 == "writes" ==> DB
+  DB == "get_state(token)" ==> X
+  DB ==> S5
+
+  class S1,S2,S3,S4,S5 screen
+  class A1,A2,A3,A4,A5,A6,A7 api
+  class G ai
+  class F,MAP ext
+  class X logic
+  class T1,T2,T3,T4,T5,T6 db
+  class H1,H2,H3,H4,H4b,H5 human
