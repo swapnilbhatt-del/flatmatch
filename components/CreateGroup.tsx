@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { useHydrated } from "@/lib/use-hydrated";
 import { CopyShare } from "./CopyShare";
 import { Avatar, Icon } from "./ui";
 
 export function CreateGroup() {
+  const hydrated = useHydrated();
   const [name, setName] = useState("");
   const [tokens, setTokens] = useState<string[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -64,7 +66,8 @@ export function CreateGroup() {
   }
 
   return (
-    <form onSubmit={create} className="relative space-y-3">
+    <form onSubmit={create}>
+      <fieldset disabled={!hydrated} className="relative space-y-3">
       <div>
         <label className="label" htmlFor="gname">
           Group name <span className="font-normal text-stone-400">(optional)</span>
@@ -76,6 +79,7 @@ export function CreateGroup() {
         {!busy && <Icon name="arrow" className="h-4 w-4" />}
       </button>
       {error && <p className="text-sm text-rose-700">{error}</p>}
+      </fieldset>
     </form>
   );
 }

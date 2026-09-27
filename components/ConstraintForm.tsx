@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { PUNE_AREAS } from "@/lib/pune-areas";
+import { useHydrated } from "@/lib/use-hydrated";
 import type { Constraints, KeyLocation, NiceToHaves } from "@/lib/types";
 import { Icon, type IconName } from "./ui";
 
@@ -55,6 +56,7 @@ function Section({ n, icon, title, hint, children }: { n: number; icon: IconName
 
 export function ConstraintForm({ token, initial }: { token: string; initial: Constraints | null }) {
   const router = useRouter();
+  const hydrated = useHydrated();
   const [name, setName] = useState(initial?.name ?? "");
   const [maxRent, setMaxRent] = useState(initial?.max_rent ? String(initial.max_rent) : "");
   const known = new Set(PUNE_AREAS);
@@ -121,7 +123,8 @@ export function ConstraintForm({ token, initial }: { token: string; initial: Con
   }
 
   return (
-    <form onSubmit={submit} className="space-y-4">
+    <form onSubmit={submit}>
+      <fieldset disabled={!hydrated} className="space-y-4">
       <div className="checkpoint flex gap-3">
         <Icon name="lock" className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" />
         <p>
@@ -228,10 +231,11 @@ export function ConstraintForm({ token, initial }: { token: string; initial: Con
       )}
       <div className="sticky bottom-20 z-10 sm:bottom-4">
         <button className="btn-primary w-full" disabled={busy}>
-          {busy ? "Saving…" : initial ? "Save changes" : "Submit my form"}
-          {!busy && <Icon name="check" className="h-4 w-4" strokeWidth={2.4} />}
+          {!hydrated ? "Loading…" : busy ? "Saving…" : initial ? "Save changes" : "Submit my form"}
+          {hydrated && !busy && <Icon name="check" className="h-4 w-4" strokeWidth={2.4} />}
         </button>
       </div>
+      </fieldset>
     </form>
   );
 }

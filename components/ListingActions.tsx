@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { FIELD_LABELS, type ListingFields } from "@/lib/types";
+import { useHydrated } from "@/lib/use-hydrated";
 import { Icon } from "./ui";
 
 async function post(url: string, body: unknown): Promise<string | null> {
@@ -21,7 +22,9 @@ async function post(url: string, body: unknown): Promise<string | null> {
 }
 
 /** A checkbox styled as a tappable pill. Ticking it submits the human confirmation. */
-function ConfirmBox({ label, disabled, busy, onConfirm, full = false }: { label: string; disabled: boolean; busy: boolean; onConfirm: () => void; full?: boolean }) {
+function ConfirmBox({ label, disabled: disabledProp, busy, onConfirm, full = false }: { label: string; disabled: boolean; busy: boolean; onConfirm: () => void; full?: boolean }) {
+  const hydrated = useHydrated();
+  const disabled = disabledProp || !hydrated;
   return (
     <label
       className={`${full ? "flex w-full" : "inline-flex"} min-h-12 cursor-pointer items-center gap-2 rounded-2xl border px-3.5 text-sm font-medium transition ${

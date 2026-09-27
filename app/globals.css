@@ -63,7 +63,7 @@ body {
   }
 
   .input {
-    @apply block min-h-12 w-full rounded-2xl border border-stone-200 bg-white px-4 text-base text-stone-900 shadow-[inset_0_1px_2px_rgb(28_25_23/0.04)] transition placeholder:text-stone-400 focus:border-brand-500 focus:outline-none focus:ring-4 focus:ring-brand-500/15;
+    @apply block min-h-12 w-full rounded-2xl border border-stone-200 bg-white px-4 text-base text-stone-900 shadow-[inset_0_1px_2px_rgb(28_25_23/0.04)] transition placeholder:text-stone-400 focus:border-brand-500 focus:outline-none focus:ring-4 focus:ring-brand-500/15 disabled:cursor-wait disabled:opacity-60;
   }
   .label {
     @apply mb-1.5 block text-sm font-medium text-stone-700;
@@ -76,7 +76,7 @@ body {
   }
 
   .chip {
-    @apply inline-flex min-h-10 items-center gap-1 rounded-full border px-3.5 text-sm transition active:scale-[0.97];
+    @apply inline-flex min-h-10 items-center gap-1 rounded-full border px-3.5 text-sm transition active:scale-[0.97] disabled:opacity-60;
   }
   .pill {
     @apply inline-flex items-center gap-1 rounded-full bg-stone-100 px-2.5 py-1 text-xs font-medium text-stone-700;

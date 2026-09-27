@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { mapsDirectionsUrl } from "@/lib/maps";
 import { FIELD_LABELS, UNKNOWN, type ListingFields } from "@/lib/types";
+import { useHydrated } from "@/lib/use-hydrated";
 import { emptyFields } from "@/lib/validate";
 import { Avatar, Icon } from "./ui";
 
@@ -73,6 +74,7 @@ function TriSelect({ id, value, onChange }: { id: string; value: string; onChang
 
 export function AddListing({ token, meId, people }: { token: string; meId: string; people: PersonLocations[] }) {
   const router = useRouter();
+  const hydrated = useHydrated();
   const [stage, setStage] = useState<Stage>("paste");
   const [text, setText] = useState("");
   const [url, setUrl] = useState("");
@@ -159,7 +161,7 @@ export function AddListing({ token, meId, people }: { token: string; meId: strin
     return (
       <div className="rise">
         <Steps current={0} />
-        <section className="card space-y-4">
+        <fieldset disabled={!hydrated} className="card space-y-4">
           <div>
             <label className="label" htmlFor="text">Listing text</label>
             <textarea
@@ -194,7 +196,7 @@ export function AddListing({ token, meId, people }: { token: string; meId: strin
           <button type="button" className="btn w-full" onClick={manual} disabled={busy}>
             Fill in by hand
           </button>
-        </section>
+        </fieldset>
       </div>
     );
   }
@@ -205,7 +207,8 @@ export function AddListing({ token, meId, people }: { token: string; meId: strin
   const unknownCount = (Object.keys(fields) as (keyof ListingFields)[]).filter(unk).length;
 
   return (
-    <form onSubmit={save} className="space-y-4 rise">
+    <form onSubmit={save} className="rise">
+      <fieldset disabled={!hydrated} className="space-y-4">
       <Steps current={1} />
       {notice && (
         <p className="flex gap-2 rounded-2xl border border-sky-200 bg-sky-50 p-3 text-sm text-sky-900">
@@ -365,6 +368,7 @@ export function AddListing({ token, meId, people }: { token: string; meId: strin
           {!busy && <Icon name="arrow" className="h-4 w-4" />}
         </button>
       </div>
+      </fieldset>
     </form>
   );
 }
